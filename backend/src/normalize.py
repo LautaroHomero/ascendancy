@@ -1,7 +1,5 @@
 import re
 
-# Sufijos redundantes en títulos de LinkedIn que fragmentan el mismo grado
-# en varios strings (ej. "Bachelor of Arts (B.A.)" vs "Bachelor of Arts (BA)").
 _DEGREE_TRAILING_PAREN = re.compile(r"\s*\([^)]*\)\s*$")
 _DEGREE_TRAILING_DASH = re.compile(
     r"\s*-\s*"

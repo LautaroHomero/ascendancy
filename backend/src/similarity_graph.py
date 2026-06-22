@@ -17,14 +17,18 @@ CATEGORIES = [
 
 def build_similarity_graph(profiles):
 
-    people = {}
+    if not profiles:
+        return {
+            category: {
+                "people": [],
+                "edges": [],
+            }
+            for category in CATEGORIES
+        }
 
-    # indexes[categoria][valor] = set de person_ids con ese valor
+    people = {}
     indexes = {category: defaultdict(set) for category in CATEGORIES}
 
-    # --------------------------------------------------
-    # PERSONAS + INDEXAR POR CATEGORIA
-    # --------------------------------------------------
 
     for person in profiles:
 
@@ -45,10 +49,6 @@ def build_similarity_graph(profiles):
             "majors": [],
         }
 
-        # ---------------------------------------------
-        # CURRENT LOCATION
-        # ---------------------------------------------
-
         if person.get("current_location"):
 
             country, city = split_location(person["current_location"])
@@ -60,9 +60,7 @@ def build_similarity_graph(profiles):
 
                 indexes["location"][country].add(person_id)
 
-        # ---------------------------------------------
-        # EXPERIENCE
-        # ---------------------------------------------
+
 
         for exp in person.get("experience", []):
 
@@ -90,9 +88,6 @@ def build_similarity_graph(profiles):
 
                 people[person_id]["positions"].append(title)
 
-        # ---------------------------------------------
-        # EDUCATION
-        # ---------------------------------------------
 
         for edu in person.get("education", []):
 
@@ -128,9 +123,6 @@ def build_similarity_graph(profiles):
 
                 people[person_id]["majors"].append(major)
 
-    # ======================================================
-    # ARMAR UN SUBGRAFO POR CATEGORIA
-    # ======================================================
 
     graphs_by_category = {}
 
@@ -163,8 +155,6 @@ def build_similarity_graph(profiles):
 
             persons = list(persons)
 
-            # Incluir a todos, aunque estén solos en ese valor
-            # (ej. una ciudad con una sola persona).
             people_in_category.update(persons)
 
             if len(persons) < 2:

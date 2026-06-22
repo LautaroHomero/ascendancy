@@ -1,3 +1,7 @@
+# Ascendancy Graph
+
+Turn a list of LinkedIn-style profiles into a map of the hidden structure connecting them. Instead of scrolling through hundreds of individual profiles, this tool surfaces the natural groups already latent in a network — who shares a company, a university, a role, a location — so a recruiter, investor, or community builder can see, at a glance, where the dense clusters and the bridge people are.
+
 # Technical Solution
 
 To solve this exercise, we modeled the network as a graph of people, where each node represents a person and edges represent relationships inferred from shared attributes. The core idea was to avoid treating the dataset as a simple list of profiles, and instead build a relational structure capable of revealing groups, bridges, and densely connected zones.
@@ -5,6 +9,8 @@ To solve this exercise, we modeled the network as a graph of people, where each 
 ## Setup
 
 This project has two parts: a Python backend that builds the graph, and a Next.js frontend that visualizes it. There is currently no hosted demo — the project runs locally.
+
+**Note:** the `graph.json` included in this submission is already generated from the dataset provided for this exercise. Running the backend below is only necessary if you want to regenerate it (e.g. after a code change) — to simply inspect the results, you can go straight to `npm run dev` in the frontend.
 
 ### Backend (graph generation)
 
@@ -14,7 +20,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-This reads the input profiles (`data/input/people.json`) and writes the resulting graph to `data/output/graph.json`.
+This reads the input profiles (`data/input/people.json` — the dataset provided for this exercise) and writes the resulting graph to `data/output/graph.json`.
 
 ### Frontend (visualization)
 
@@ -24,7 +30,7 @@ npm install
 npm run dev
 ```
 
-This starts the app on `http://localhost:3000`. It reads its own copy of `graph.json` from `frontend/data/graph.json` — after regenerating the graph, copy the backend's output there to see the updated data.
+This starts the app on `http://localhost:3000`. It reads its own copy of `graph.json` from `frontend/data/graph.json`, which already contains the processed output for the provided dataset — after regenerating the graph, copy the backend's output there to see the updated data.
 
 ## Graph Construction
 
@@ -111,6 +117,68 @@ This doesn't mean the group's label is a literal truth about every person in it 
 The interface was designed to be minimalist, on a dark background, so the network itself stays the visual focus. Groups are represented as circular nodes, and node size reflects cluster size. Larger groups carry more visual weight, and the spatial layout aims for a sense of orbit or floating, especially in the overview.
 
 When entering a group, the network expands to show its connected members, preserving the distinction between the community view and the clique view.
+
+## Input / Output Example
+
+The example below uses a real profile from the dataset provided for this exercise, and the real cluster it ends up in after running the pipeline — not synthetic data.
+
+### Input
+
+The backend expects a JSON file with a top-level `"data"` key holding a list of profiles. Each profile follows a LinkedIn-export shape, with nested `experience` and `education` arrays. Here's one profile from the provided dataset:
+
+```json
+{
+  "data": [
+    {
+      "id": 0,
+      "full_name": "Zach Hughes",
+      "current_title": "Board Member",
+      "current_location": "Greenville, South Carolina, United States",
+      "experience": [
+        {
+          "title": "Board Member",
+          "company": { "name": "Triune Mercy Center" },
+          "is_current": true
+        },
+        {
+          "title": "Co-Founder | Client Strategy",
+          "company": { "name": "Ascendancy" }
+        }
+      ],
+      "education": [
+        {
+          "school": { "name": "Clemson University" },
+          "degrees": ["Bachelor of Arts (B.A.)"],
+          "majors": ["Political Science"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Output
+
+This profile lists "Clemson University" as a school, so it gets indexed into the `university` category — and, in this dataset, also into `company` when an academic affiliation shows up under `experience` instead of `education` (e.g. research or teaching roles at the university). For each of the six categories (company, university, location, position, degree, major), `graph.json` holds an independent set of clusters. Here's the real "Clemson University" cluster from the `company` category in this dataset:
+
+```json
+{
+  "id": 0,
+  "name": "Clemson University (74 personas)",
+  "size": 74,
+  "members": [ /* full person objects in this cluster */ ],
+  "edges": [ /* internal edges, with weight and reasons */ ],
+  "top_companies": [["Invisible Technologies", 18], ["Social Slooth", 16]],
+  "top_universities": [["Clemson University", 74]],
+  "top_locations": [["Clemson, South Carolina, United States", 26]]
+}
+```
+
+### How to Read It
+
+- **`name`** is the most common value for that category within the cluster, followed by its size — it's a label, not a guarantee that every member matches it (see [What a Community Represents](#what-a-community-represents)).
+- **`top_*`** fields rank the most frequent attribute values *inside* that cluster, which is what powers the per-cluster breakdown in the UI (e.g. seeing that a "Clemson University" cluster also has "Invisible Technologies" as a common employer).
+- **`members`** is the full list of person objects assigned to that community by Louvain — cross-reference this with the input profiles by `id`.
 
 ## Limitations and Assumptions
 

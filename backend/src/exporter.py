@@ -4,9 +4,6 @@ import json
 
 from location_utils import split_location
 
-
-# Mapea cada categoria al campo top_* que corresponde, para poder
-# elegir el nombre del cluster sin un if/elif repetido por categoria.
 _TOP_FIELD_BY_CATEGORY = {
     "company": "top_companies",
     "university": "top_universities",
@@ -310,8 +307,6 @@ def _export_category(category_graph, category_community_data, category):
 
                         majors[value] += 1
 
-        # Preferir conteos de edges cuando existen; si no (cluster de 1),
-        # usar los atributos de los miembros directamente.
         def pick_top(edge_counter, member_key):
 
             from_edges = edge_counter.most_common(10)
