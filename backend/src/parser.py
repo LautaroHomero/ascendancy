@@ -29,7 +29,6 @@ def parse_profiles(data):
             "person"
         )
 
-        # CURRENT LOCATION
         current_location = person.get("current_location")
 
         if current_location:
@@ -47,7 +46,6 @@ def parse_profiles(data):
                 "LIVES_IN"
             )
 
-        # EXPERIENCE
         for exp in person.get("experience", []):
 
             company = exp.get("company")
@@ -89,7 +87,6 @@ def parse_profiles(data):
                 end_date=exp.get("end_date")
             )
 
-            # INDUSTRY
             industry = company.get("industry")
 
             if industry:
@@ -111,7 +108,6 @@ def parse_profiles(data):
                     "IN_INDUSTRY"
                 )
 
-            # COMPANY LOCATIONS
             for loc in company.get("locations", []):
 
                 country = loc.get("country")
@@ -182,7 +178,6 @@ def parse_profiles(data):
                         "LOCATED_IN"
                     )
 
-        # EDUCATION
         for edu in person.get("education", []):
 
             school = edu.get("school")

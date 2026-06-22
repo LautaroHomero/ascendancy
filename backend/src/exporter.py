@@ -4,9 +4,6 @@ import json
 
 from location_utils import split_location
 
-
-# Mapea cada categoria al campo top_* que corresponde, para poder
-# elegir el nombre del cluster sin un if/elif repetido por categoria.
 _TOP_FIELD_BY_CATEGORY = {
     "company": "top_companies",
     "university": "top_universities",
@@ -85,7 +82,7 @@ def _cluster_name(cluster_export, category, size, location_value=None):
 
     if category in ("location", "degree") and location_value:
 
-        return f"{location_value} ({size} personas)"
+        return f"{location_value} ({size})"
 
     top_field = _TOP_FIELD_BY_CATEGORY[category]
 
@@ -93,11 +90,11 @@ def _cluster_name(cluster_export, category, size, location_value=None):
 
     if not top_values:
 
-        return f"Cluster {cluster_export['id']} ({size} personas)"
+        return f"Cluster {cluster_export['id']} ({size})"
 
     top_value, _count = top_values[0]
 
-    return f"{top_value} ({size} personas)"
+    return f"{top_value} ({size})"
 
 
 def _disambiguate_cluster_names(exported_clusters, category):
@@ -111,14 +108,7 @@ def _disambiguate_cluster_names(exported_clusters, category):
 
         seen[base] += 1
 
-        if seen[base] > 1:
-
-            duplicate_name = (
-                f"{base} · grupo {cluster_export['id']} ({cluster_export['size']} personas)"
-            )
-
-            cluster_export["name"] = duplicate_name
-            cluster_export["label"] = duplicate_name
+        cluster_export["group"] = seen[base] - 1
 
 
 def _export_location_category(category_graph):
@@ -310,8 +300,6 @@ def _export_category(category_graph, category_community_data, category):
 
                         majors[value] += 1
 
-        # Preferir conteos de edges cuando existen; si no (cluster de 1),
-        # usar los atributos de los miembros directamente.
         def pick_top(edge_counter, member_key):
 
             from_edges = edge_counter.most_common(10)

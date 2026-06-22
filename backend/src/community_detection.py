@@ -34,8 +34,6 @@ def _detect_communities_single(category_graph):
     clusters = []
 
     node_cluster = {}
-
-    # Sin aristas: cada nodo es su propio cluster (caso "solo 1 persona").
     if G.number_of_edges() == 0:
 
         for cluster_id, node in enumerate(G.nodes()):

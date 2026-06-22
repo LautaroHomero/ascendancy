@@ -1,3 +1,7 @@
+# Ascendancy Graph
+
+Turn a list of LinkedIn-style profiles into a map of the hidden structure connecting them. Instead of scrolling through hundreds of individual profiles, this tool surfaces the natural groups already latent in a network — who shares a company, a university, a role, a location — so a recruiter, investor, or community builder can see, at a glance, where the dense clusters and the bridge people are.
+
 # Technical Solution
 
 To solve this exercise, we modeled the network as a graph of people, where each node represents a person and edges represent relationships inferred from shared attributes. The core idea was to avoid treating the dataset as a simple list of profiles, and instead build a relational structure capable of revealing groups, bridges, and densely connected zones.
@@ -6,7 +10,27 @@ To solve this exercise, we modeled the network as a graph of people, where each 
 
 This project has two parts: a Python backend that builds the graph, and a Next.js frontend that visualizes it. There is currently no hosted demo — the project runs locally.
 
-### Backend (graph generation)
+**Note:** the `graph.json` included in this submission is already generated from the dataset provided for this exercise. Running the backend below is only necessary if you want to regenerate it (e.g. after a code change) — to simply inspect the results, you can go straight to `npm run dev` in the frontend.
+
+### Database
+
+Both the backend and the frontend's insights API connect to a local PostgreSQL database. You'll need PostgreSQL installed and running before either side will work.
+
+```bash
+createdb ascendancy
+```
+
+Each side (`backend/` and `frontend/`) has its own `.env.example`. Copy it to `.env` in both folders and fill in your own credentials:
+
+```bash
+cp .env.example .env
+```
+
+```
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/ascendancy
+```
+
+### Backend (graph generation + database population)
 
 ```bash
 cd backend
@@ -14,7 +38,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-This reads the input profiles (`data/input/people.json`) and writes the resulting graph to `data/output/graph.json`.
+This reads the input profiles (`data/input/people.json` — the dataset provided for this exercise), writes the resulting graph to `data/output/graph.json`, and creates/populates the `people` table in PostgreSQL — this table is what powers the per-person insights API used by the [Person Detail View](#person-detail-view). Run this before starting the frontend, since the insights API depends on this table being populated.
 
 ### Frontend (visualization)
 
@@ -24,7 +48,7 @@ npm install
 npm run dev
 ```
 
-This starts the app on `http://localhost:3000`. It reads its own copy of `graph.json` from `frontend/data/graph.json` — after regenerating the graph, copy the backend's output there to see the updated data.
+This starts the app on `http://localhost:3000`. It reads its own copy of `graph.json` from `frontend/data/graph.json`, which already contains the processed output for the provided dataset — after regenerating the graph, copy the backend's output there to see the updated data. The frontend also queries PostgreSQL directly (via its own `DATABASE_URL`) to power the [Person Detail View](#person-detail-view), so the backend step above must be run at least once first.
 
 ## Graph Construction
 
@@ -100,6 +124,14 @@ The second view is a complete representation of the selected group: every node i
 - legibility of internal relationships
 - a visual comparison against the real community
 
+## Person Detail View
+
+Beyond the cluster-level views, clicking on an individual person node opens a detail panel for that profile. It shows their core information (name, headline, current company, current location) alongside a breakdown of how many other people in the dataset they overlap with — shared university, shared companies, shared positions, and people living in the same city or country.
+
+This view is powered by a small API that queries the people table directly, rather than the static `graph.json`: it's meant to answer a more granular question than "what cluster is this person in" — namely, "across the *entire* dataset, who else looks like this person, regardless of which cluster they ended up in." This matters because cluster membership reflects structural proximity within one category at a time (see [What a Community Represents](#what-a-community-represents)), while this view cuts directly across all six dimensions (company, university, position, location, degree, major) for a single person, independent of the Louvain run.
+
+In short: the cluster views answer "what groups exist in this network," and the person detail view answers "who is this person actually connected to, and on what basis."
+
 ### Interpretive Example
 
 Suppose there's a cluster labeled "Software Engineer." Within that group, you might find a person whose actual title is "Social Media Investigator." That happens because this person is connected to other members of the group through other shared attributes, and Louvain places them in that community based on structural closeness.
@@ -111,6 +143,68 @@ This doesn't mean the group's label is a literal truth about every person in it 
 The interface was designed to be minimalist, on a dark background, so the network itself stays the visual focus. Groups are represented as circular nodes, and node size reflects cluster size. Larger groups carry more visual weight, and the spatial layout aims for a sense of orbit or floating, especially in the overview.
 
 When entering a group, the network expands to show its connected members, preserving the distinction between the community view and the clique view.
+
+## Input / Output Example
+
+The example below uses a real profile from the dataset provided for this exercise, and the real cluster it ends up in after running the pipeline — not synthetic data.
+
+### Input
+
+The backend expects a JSON file with a top-level `"data"` key holding a list of profiles. Each profile follows a LinkedIn-export shape, with nested `experience` and `education` arrays. Here's one profile from the provided dataset:
+
+```json
+{
+  "data": [
+    {
+      "id": 0,
+      "full_name": "Zach Hughes",
+      "current_title": "Board Member",
+      "current_location": "Greenville, South Carolina, United States",
+      "experience": [
+        {
+          "title": "Board Member",
+          "company": { "name": "Triune Mercy Center" },
+          "is_current": true
+        },
+        {
+          "title": "Co-Founder | Client Strategy",
+          "company": { "name": "Ascendancy" }
+        }
+      ],
+      "education": [
+        {
+          "school": { "name": "Clemson University" },
+          "degrees": ["Bachelor of Arts (B.A.)"],
+          "majors": ["Political Science"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Output
+
+This profile lists "Clemson University" as a school, so it gets indexed into the `university` category — and, in this dataset, also into `company` when an academic affiliation shows up under `experience` instead of `education` (e.g. research or teaching roles at the university). For each of the six categories (company, university, location, position, degree, major), `graph.json` holds an independent set of clusters. Here's the real "Clemson University" cluster from the `company` category in this dataset:
+
+```json
+{
+  "id": 0,
+  "name": "Clemson University (74 peoples)",
+  "size": 74,
+  "members": [ /* full person objects in this cluster */ ],
+  "edges": [ /* internal edges, with weight and reasons */ ],
+  "top_companies": [["Invisible Technologies", 18], ["Social Slooth", 16]],
+  "top_universities": [["Clemson University", 74]],
+  "top_locations": [["Clemson, South Carolina, United States", 26]]
+}
+```
+
+### How to Read It
+
+- **`name`** is the most common value for that category within the cluster, followed by its size — it's a label, not a guarantee that every member matches it (see [What a Community Represents](#what-a-community-represents)).
+- **`top_*`** fields rank the most frequent attribute values *inside* that cluster, which is what powers the per-cluster breakdown in the UI (e.g. seeing that a "Clemson University" cluster also has "Invisible Technologies" as a common employer).
+- **`members`** is the full list of person objects assigned to that community by Louvain — cross-reference this with the input profiles by `id`.
 
 ## Limitations and Assumptions
 
