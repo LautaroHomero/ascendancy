@@ -5,7 +5,7 @@ from exporter import export_graph
 
 
 INPUT_PATH = "../data/X Connections.json"
-OUTPUT_PATH = "../ascendancy-graph/public/graph.json"
+OUTPUT_PATH = "../../frontend/public/graph.json"
  
  
 def main():
