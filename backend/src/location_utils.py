@@ -1,5 +1,4 @@
 def split_location(raw_location):
-    """Devuelve (country, city) a partir de `current_location`."""
 
     if not raw_location:
         return None, None

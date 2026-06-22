@@ -4,11 +4,6 @@ from networkx.algorithms.community import louvain_communities
 
 
 def _detect_communities_single(category_graph):
-    """
-    Corre la detección de comunidades sobre un único subgrafo
-    (la lógica es la misma que la versión original de detect_communities,
-    aplicada a un solo grafo en vez de al grafo global).
-    """
 
     G = nx.Graph()
 
@@ -93,8 +88,6 @@ def _detect_communities_single(category_graph):
 
         })
 
-    # Louvain puede dejar nodos aislados fuera de las comunidades detectadas;
-    # agregarlos como clusters de 1 para conservar perfiles sin conexiones.
     for node in G.nodes():
 
         if node in node_cluster:
@@ -127,9 +120,7 @@ def _detect_communities_single(category_graph):
 
 
 def _detect_attribute_clusters(category_graph, attribute_key):
-    """
-    Un cluster por cada valor distinto del atributo (location, degree, etc.).
-    """
+
 
     G = nx.Graph()
 
@@ -213,18 +204,7 @@ def _detect_degree_clusters(category_graph):
 
 
 def detect_communities(graphs_by_category):
-    """
-    Recibe el dict de subgrafos por categoria (salida de
-    build_similarity_graph) y corre la detección de comunidades
-    en cada uno por separado.
 
-    Retorna:
-        {
-            "company":    {"graph": G, "clusters": [...], "node_cluster": {...}},
-            "university": {...},
-            ...
-        }
-    """
 
     return {
         category: (

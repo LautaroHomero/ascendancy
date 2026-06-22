@@ -13,7 +13,6 @@ _DEGREE_TRAILING_DASH = re.compile(
 
 
 def normalize_degree(degree: str) -> str:
-    """Unifica variantes del mismo título académico."""
 
     if not degree:
 

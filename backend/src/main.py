@@ -12,6 +12,7 @@ def main():
  
     print("Loading profiles...")
     profiles = load_profiles(INPUT_PATH)
+    print(f"profiles {profiles}")
     print(f"Loaded {len(profiles)} profiles")
  
     print("Building similarity graph...")

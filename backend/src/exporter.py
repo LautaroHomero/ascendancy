@@ -18,7 +18,6 @@ _TOP_FIELD_BY_CATEGORY = {
 
 
 def _count_member_attributes(members):
-    """Cuenta atributos directamente de los miembros (incluye clusters de 1)."""
 
     companies = Counter()
     universities = Counter()
@@ -83,15 +82,6 @@ def _build_cluster_export(cluster_id, members, label):
 
 
 def _cluster_name(cluster_export, category, size, location_value=None):
-    """
-    Nombre del cluster: el valor mas frecuente de la categoria que
-    le dio origen (ej. en "university", el nombre de la universidad
-    mas comun dentro del cluster), seguido de la cantidad de personas.
-
-    Si el cluster no tiene ningun edge interno (clusters de 1 sola
-    persona, sin conexiones), no hay un top valor para usar, y se cae
-    a un nombre generico con el id del cluster.
-    """
 
     if category in ("location", "degree") and location_value:
 
@@ -111,10 +101,6 @@ def _cluster_name(cluster_export, category, size, location_value=None):
 
 
 def _disambiguate_cluster_names(exported_clusters, category):
-    """
-    Si varios clusters comparten el mismo nombre base (ej. tres
-    componentes distintos con Clemson University), agrega un sufijo.
-    """
 
     seen = Counter()
 
@@ -216,13 +202,6 @@ def _export_location_category(category_graph):
 
 
 def _export_category(category_graph, category_community_data, category):
-    """
-    Exporta una única categoría (ej: "company") con la misma lógica
-    de la versión original de export_graph: arma los clusters con
-    sus top_companies/top_universities/etc., pero ahora a partir de
-    un subgrafo de una sola categoría.
-    """
-
     if category == "location":
         return _export_location_category(category_graph)
 
@@ -394,20 +373,6 @@ def export_graph(
     community_data_by_category,
     output_path
 ):
-    """
-    Exporta los 6 subgrafos (uno por categoria), cada uno con sus
-    propios clusters y stats, a un único archivo graph.json.
-
-    Forma del output:
-        {
-            "company":    { "stats", "people", "edges", "clusters" },
-            "university": { ... },
-            "location":   { ... },
-            "position":   { ... },
-            "degree":     { ... },
-            "major":      { ... }
-        }
-    """
 
     output = {
 

@@ -16,23 +16,6 @@ CATEGORIES = [
 
 
 def build_similarity_graph(profiles):
-    """
-    Construye un subgrafo independiente por cada tipo de atributo.
-
-    A diferencia de la versión anterior (que mezclaba las 6 categorías
-    en un solo grafo), esta función devuelve 6 grafos separados, uno
-    por categoria. Una misma persona puede aparecer en varios de ellos.
-
-    Retorna:
-        {
-            "company":    {"people": [...], "edges": [...]},
-            "university": {"people": [...], "edges": [...]},
-            "location":   {"people": [...], "edges": [...]},
-            "position":   {"people": [...], "edges": [...]},
-            "degree":     {"people": [...], "edges": [...]},
-            "major":      {"people": [...], "edges": [...]},
-        }
-    """
 
     people = {}
 
