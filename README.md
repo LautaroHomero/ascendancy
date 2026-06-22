@@ -2,6 +2,30 @@
 
 To solve this exercise, we modeled the network as a graph of people, where each node represents a person and edges represent relationships inferred from shared attributes. The core idea was to avoid treating the dataset as a simple list of profiles, and instead build a relational structure capable of revealing groups, bridges, and densely connected zones.
 
+## Setup
+
+This project has two parts: a Python backend that builds the graph, and a Next.js frontend that visualizes it. There is currently no hosted demo — the project runs locally.
+
+### Backend (graph generation)
+
+```bash
+cd backend
+pip install -r requirements.txt
+python3 main.py
+```
+
+This reads the input profiles (`data/input/people.json`) and writes the resulting graph to `data/output/graph.json`.
+
+### Frontend (visualization)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+This starts the app on `http://localhost:3000`. It reads its own copy of `graph.json` from `frontend/data/graph.json` — after regenerating the graph, copy the backend's output there to see the updated data.
+
 ## Graph Construction
 
 We first parsed and cleaned the data to normalize the noisiest fields, particularly academic titles and locations. We then built the network across several dimensions of similarity:
@@ -65,32 +89,16 @@ It helps answer questions like:
 - which nodes act as bridges between communities?
 - where are the dense zones or the cut points?
 
-This view is the most faithful to the network's structural analysis, and the most useful for the exercise's main objective.
+This view is the most faithful to the network's structural analysis, and the most useful for the exercise's main objective. The community is **analytical**: a person can belong to it without being directly connected to every other member, since membership often comes from indirect paths of connection rather than from a direct relationship with each one.
 
 ### 2. Clique View
 
-The second view is a complete representation of the selected group. In this mode, every node in the cluster is connected to every other node in that same cluster.
-
-This isn't meant for structural inference — it's meant for visual inspection. Its purpose is to show:
+The second view is a complete representation of the selected group: every node in the cluster is connected to every other node in that same cluster. Unlike the community view, the clique is **exploratory**, not structural — it doesn't replace the community view, it complements it, showing what the group would look like if every possible connection were present, mainly for:
 
 - maximum density
 - full interaction between group members
 - legibility of internal relationships
 - a visual comparison against the real community
-
-The clique view doesn't replace the community view; it complements it. The community tells us which groups exist structurally. The clique lets us see what that group would look like if every possible connection were present.
-
-## Community vs. Clique
-
-It's important to distinguish between the two:
-
-- **Community**: a group detected from the graph's real structure.
-- **Clique**: a visually completed group, where everyone is connected to everyone.
-
-The community is analytical.
-The clique is exploratory.
-
-That's why a person can appear in a community without being directly connected to every other member. That's not a bug — it's exactly the effect of a relational network. Group membership is often the result of indirect paths of connection, not direct relationships with every single member.
 
 ### Interpretive Example
 
