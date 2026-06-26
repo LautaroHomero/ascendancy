@@ -1,22 +1,4 @@
-from collections import defaultdict
-from itertools import combinations
-
-from normalize import normalize_degree
-from location_utils import split_location
-
-
-CATEGORIES = [
-    "company",
-    "university",
-    "location",
-    "position",
-    "degree",
-    "major",
-]
-
-
 def build_similarity_graph(profiles):
-
     if not profiles:
         return {
             category: {
@@ -30,7 +12,6 @@ def build_similarity_graph(profiles):
     indexes = {category: defaultdict(set) for category in CATEGORIES}
 
     for person in profiles:
-
         # Skip malformed profiles
         if not isinstance(person, dict):
             continue
@@ -60,85 +41,73 @@ def build_similarity_graph(profiles):
         }
 
         current_location = person.get("current_location")
-
         if current_location:
-
             country, city = split_location(current_location)
-
             people[person_id]["current_country"] = country
             people[person_id]["current_city"] = city
-
             if country:
                 indexes["location"][country].add(person_id)
 
-        for exp in person.get("experience") or []:
-
-            if not isinstance(exp, dict):
-                continue
-
-            company = exp.get("company")
-
-            if isinstance(company, dict):
-
-                company_name = company.get("name")
-
-                if company_name:
-
-                    indexes["company"][company_name].add(person_id)
-                    people[person_id]["companies"].append(company_name)
-
-            title = exp.get("title")
-
-            if title:
-
-                indexes["position"][title].add(person_id)
-                people[person_id]["positions"].append(title)
-
-        for edu in person.get("education") or []:
-
-            if not isinstance(edu, dict):
-                continue
-
-            school = edu.get("school")
-
-            if isinstance(school, dict):
-
-                school_name = school.get("name")
-
-                if school_name:
-
-                    indexes["university"][school_name].add(person_id)
-                    people[person_id]["universities"].append(school_name)
-
-            for degree in edu.get("degrees") or []:
-
-                if not degree:
+        # 🟢 SOLUCIÓN: Validar que 'experience' sea una lista antes de iterar
+        experiences = person.get("experience")
+        if isinstance(experiences, list):
+            for exp in experiences:
+                if not isinstance(exp, dict):
                     continue
 
-                normalized = normalize_degree(degree)
+                company = exp.get("company")
+                if isinstance(company, dict):
+                    company_name = company.get("name")
+                    if company_name:
+                        indexes["company"][company_name].add(person_id)
+                        people[person_id]["companies"].append(company_name)
 
-                indexes["degree"][normalized].add(person_id)
-                people[person_id]["degrees"].append(normalized)
+                title = exp.get("title")
+                if title:
+                    indexes["position"][title].add(person_id)
+                    people[person_id]["positions"].append(title)
 
-            for major in edu.get("majors") or []:
-
-                if not major:
+        # 🟢 SOLUCIÓN: Validar que 'education' sea una lista antes de iterar
+        educations = person.get("education")
+        if isinstance(educations, list):
+            for edu in educations:
+                if not isinstance(edu, dict):
                     continue
 
-                indexes["major"][major].add(person_id)
-                people[person_id]["majors"].append(major)
+                school = edu.get("school")
+                if isinstance(school, dict):
+                    school_name = school.get("name")
+                    if school_name:
+                        indexes["university"][school_name].add(person_id)
+                        people[person_id]["universities"].append(school_name)
 
+                # 🟢 SOLUCIÓN: Validar que 'degrees' sea una lista
+                degrees = edu.get("degrees")
+                if isinstance(degrees, list):
+                    for degree in degrees:
+                        if not degree:
+                            continue
+                        normalized = normalize_degree(degree)
+                        indexes["degree"][normalized].add(person_id)
+                        people[person_id]["degrees"].append(normalized)
+
+                # 🟢 SOLUCIÓN: Validar que 'majors' sea una lista
+                majors = edu.get("majors")
+                if isinstance(majors, list):
+                    for major in majors:
+                        if not major:
+                            continue
+                        indexes["major"][major].add(person_id)
+                        people[person_id]["majors"].append(major)
+
+    # (El resto de la función para armar las conexiones queda exactamente igual...)
     graphs_by_category = {}
-
     for category in CATEGORIES:
-
         edges = {}
         people_in_category = set()
 
         def add_connection(person_a, person_b, value):
-
             key = tuple(sorted([person_a, person_b]))
-
             if key not in edges:
                 edges[key] = {
                     "source": key[0],
@@ -146,25 +115,14 @@ def build_similarity_graph(profiles):
                     "weight": 0,
                     "reasons": [],
                 }
-
             edges[key]["weight"] += 1
-
-            edges[key]["reasons"].append(
-                {
-                    "type": category,
-                    "value": value,
-                }
-            )
+            edges[key]["reasons"].append({"type": category, "value": value})
 
         for value, persons in indexes[category].items():
-
             persons = list(persons)
-
             people_in_category.update(persons)
-
             if len(persons) < 2:
                 continue
-
             for p1, p2 in combinations(persons, 2):
                 add_connection(p1, p2, value)
 
