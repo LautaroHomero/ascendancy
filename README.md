@@ -38,7 +38,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-This reads the input profiles (`data/input/people.json` — the dataset provided for this exercise), writes the resulting graph to `data/output/graph.json`, and creates/populates the `people` table in PostgreSQL — this table is what powers the per-person insights API used by the [Person Detail View](#person-detail-view). Run this before starting the frontend, since the insights API depends on this table being populated.
+This reads the input profiles (`data/X Connections.json` — the dataset provided for this exercise), writes the resulting graph to `public/graph.json`, and creates/populates the `people` table in PostgreSQL — this table is what powers the per-person insights API used by the [Person Detail View](#person-detail-view). Run this before starting the frontend, since the insights API depends on this table being populated.
 
 ### Frontend (visualization)
 

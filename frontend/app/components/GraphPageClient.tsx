@@ -5,18 +5,26 @@ import { CategoryKey, GraphDataByCategory } from "../types/graph";
 import CategorySelector from "./CategorySelector";
 import GraphView from "./GraphView";
 
-
 interface GraphPageClientProps {
   graphsByCategory: GraphDataByCategory;
 }
 
 export default function GraphPageClient({ graphsByCategory }: GraphPageClientProps) {
   const [category, setCategory] = useState<CategoryKey>("company");
-
+  
   const activeGraph = useMemo(
     () => graphsByCategory[category],
     [graphsByCategory, category]
   );
+
+  const isEmpty = useMemo(() => {
+    if (!activeGraph) return true;
+    
+    const hasPeople = activeGraph.people && activeGraph.people.length > 0;
+    const hasClusters = activeGraph.clusters && activeGraph.clusters.length > 0;
+    
+    return !hasPeople && !hasClusters;
+  }, [activeGraph]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black">
@@ -34,7 +42,14 @@ export default function GraphPageClient({ graphsByCategory }: GraphPageClientPro
         </div>
       </div>
 
-      <GraphView graph={activeGraph} category={category} />
+      {isEmpty ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50">
+          <p className="text-lg font-medium">No data available</p>
+          <p className="text-sm text-white/30">Run the backend with a JSON.</p>
+        </div>
+      ) : (
+        <GraphView graph={activeGraph} category={category} />
+      )}
     </div>
   );
 }

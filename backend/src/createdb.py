@@ -1,11 +1,29 @@
-import psycopg2
+import os
 import json
-conn = psycopg2.connect(
-    host="localhost",
-    database="ascendancy",
-    user="lautarohomeroaguerreche",
-    password="postgres"
-)
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Prefer a single DATABASE_URL env var, fall back to individual DB_* vars or hardcoded defaults
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    conn = psycopg2.connect(DATABASE_URL)
+else:
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_NAME = os.getenv("DB_NAME", "ascendancy")
+    DB_USER = os.getenv("DB_USER", "lautarohomeroaguerreche")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+    )
 
 def save_people(people):
 
